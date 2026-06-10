@@ -33,8 +33,8 @@ local function buildCar(position: Vector3): Model
 	chassis.Material    = Enum.Material.SmoothPlastic
 	-- Low friction so the car doesn't grip sideways (we control velocity directly)
 	chassis.CustomPhysicalProperties = PhysicalProperties.new(
-		1,    -- density
-		0.05, -- friction
+		2,    -- density  (heavier = more stable, less bouncy)
+		0.5,  -- friction (grip with ground, helps prevent spinning out)
 		0.0,  -- elasticity
 		0,    -- frictionWeight
 		0     -- elasticityWeight

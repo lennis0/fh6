@@ -52,6 +52,9 @@ local function attachToCar(car: Model)
 	carAngVel = chassis:WaitForChild("CarAngularVelocity")  :: BodyAngularVelocity
 	carGyro   = chassis:WaitForChild("CarGyro")             :: BodyGyro
 	speed     = 0
+	-- Increase responsiveness now that the client owns the physics
+	carVel.P    = 5e5
+	carAngVel.P = 5e5
 end
 
 -- ──────────────────────────────────────────────────────────────────────────────
@@ -126,9 +129,16 @@ RunService.Heartbeat:Connect(function(dt: number)
 		* (speed < 0 and -1 or 1)
 
 	-- ── Apply to physics movers ────────────────────────────────────────────
-	local lookVec = chassis.CFrame.LookVector
-	carVel.Velocity             = lookVec * speed
-	carAngVel.AngularVelocity   = Vector3.new(0, -yawRate, 0)
+	local lookVec  = chassis.CFrame.LookVector
+	local rightVec = chassis.CFrame.RightVector
+
+	-- Lateral grip: measure how much the car is sliding sideways, then cancel
+	-- most of it so the car tracks its heading instead of drifting freely.
+	local assemblyVel = chassis.AssemblyLinearVelocity
+	local lateralDrift = assemblyVel:Dot(rightVec)
+
+	carVel.Velocity           = lookVec * speed - rightVec * (lateralDrift * CONFIG.Grip)
+	carAngVel.AngularVelocity = Vector3.new(0, -yawRate, 0)
 
 	-- Keep gyro pointed level at the car's current yaw so it only corrects
 	-- pitch/roll without fighting the angular velocity on Y.
